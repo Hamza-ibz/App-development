@@ -22,7 +22,7 @@
         <p v-html='product.location'></p>
         <p> Stock: {{product.availableInventory}}</p>
         <p> Price: £{{product.price}}</p>
-        <button @click="addToCart" :disabled='!canAddToCart'> Add to cart </button>
+        <button @click="addToCart" > Add to cart </button>
         <!-- <button disabled='disabled' v-else> Add to cart </button> -->
         </div>
         <div v-else>
@@ -48,8 +48,10 @@
 
             methods: {
                 addToCart: function () {
+                    if(this.canAddToCart == true){
                     this.product.availableInventory=this.product.availableInventory-1;
                     this.cart.push(this.product.id)
+                    }
                 },
                 showCheckout() {
                     this.showProduct = this.showProduct ? false : true;
