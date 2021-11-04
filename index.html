@@ -15,17 +15,85 @@
         <header>
             <h1 v-text='sitename'> </h1>
             <button @click='showCheckout'> {{cartItemCount}} <span class="fas fa-cart-plus"></span>Checkout</button>
+            <br>
+            <br>
         </header>
         <div v-if='showProduct'>
-        <img v-bind:src='product.image'>
-        <h2 v-text='product.title'></h2>
-        <p v-html='product.location'></p>
-        <p> Stock: {{product.availableInventory}}</p>
-        <p> Price: £{{product.price}}</p>
-        <button @click="addToCart" > Add to cart </button>
-        <!-- <button disabled='disabled' v-else> Add to cart </button> -->
+            <img v-bind:src='product.image'>
+            <h2 v-text='product.title'></h2>
+            <p v-html='product.location'></p>
+            <p> Stock: {{product.availableInventory}}</p>
+            <p> Price: £{{product.price}}</p>
+            <button @click="addToCart" v-if="canAddToCart"> Add to cart </button>
+            <button disabled='disabled' v-else> Add to cart </button>
+            <span v-if="product.availableInventory === 0"> 
+                All out!!!
+            </span>
+            <span v-else-if="product.availableInventory <= 5 "> 
+                Only {{product.availableInventory}} left!
+            </span>
+            <span v-else>Buy now!!</span>
+            <p><span v-for="n in product.rating" >✭</span><span v-for="n in 5-product.rating" >☆</span></p>
+            
         </div>
         <div v-else>
+            <h2>Checkout</h2>
+
+            <p>
+                <strong>First Name:</strong>
+                <input v-model.trim="order.firstName" />
+            </p>
+
+            <p>
+                <strong>Last Name:</strong>
+                <input v-model.trim="order.lastName" />
+            </p>
+
+            <p><strong>Address:</strong> <input v-model="order.address" /></p>
+            <p><strong>City:</strong> <input v-model="order.city" /></p>
+            <p>
+                <strong>State:</strong>
+                <select v-model="order.state">
+                    <option disabled value="">State</option>
+                    <!-- <option v-bind:value="states.AL">AL</option>
+                    <option v-bind:value="states.AR">AR</option>
+                    <option v-bind:value="states.CA">CA</option>
+                    <option v-bind:value="states.NV">NV</option> -->
+
+                    <option v-for='(state, key) in states' :value='key'>{{state}}</option>
+
+                </select>
+            </p>
+            <p><strong>Zip/Postal Code:</strong> <input v-model.number="order.zip" type="number"/></p>
+
+            <p>
+                <input type="checkbox" id="gift" value="true" v-model="order.gift" :true-value="order.sendGift">
+                <label for="gift">Ship as Gift?</label>
+            </p>
+            <p>
+                <input type="radio" id="home" value="Home" v-model="order.method">
+                <label for="home">Home</label>
+                <input type="radio" id="business" value="Business" v-model="order.method">
+                <label for="business">Business</label>
+            </p>
+
+            <h2>order Information</h2>
+            <p>First Name: {{order.firstName}}</p>
+            <p>Last Name: {{order.lastName}}</p>
+            <p>address: {{order.address}}</p>
+            <p>city: {{order.city}}</p>
+            <p>state: {{order.state}}</p>
+            <p>zip: {{order.zip}}</p>
+            <p>ship as gift?:{{order.gift}}</p>
+
+            <!-- <p>
+                <input type="checkbox" id="gift" value="true" v-model="order.gift" v-bind:true-value="order.sendGift" v-bind: false-value="order.dontSendGift">
+            </p> -->
+
+
+
+            <button v-on:click="submitForm">Place Order</button>
+
 
         </div>
     </div>
@@ -34,13 +102,32 @@
             el: '#app',
             data: {
                 sitename: 'After School Club',
+                order: {
+                    firstName: "",
+                    lastName: "",
+                    address: "",
+                    city: "",
+                    zip: "",
+                    state: "",
+                    method: 'Home',
+                    gift: false,
+                    sendGift:"send gift pls",
+                    dontSendGift:"dont send me shyt",
+                },
+                states: {
+                    AL: "apple",
+                    AR: "arinak",
+                    CA: "canada",
+                    NV: "new veiw",
+                },
                 product: {
                     id: 1001,
                     title: "Maths",
                     location: "London",
                     price: 200,
                     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7ns5xJEixf6hWBaNrruZH1XvGS6wqGzf_GA&usqp=CAU",
-                    availableInventory: 5
+                    availableInventory: 10,
+                    rating:3,
                 },
                 cart: [],
                 showProduct: true,
@@ -48,14 +135,15 @@
 
             methods: {
                 addToCart: function () {
-                    if(this.canAddToCart == true){
-                    this.product.availableInventory=this.product.availableInventory-1;
-                    this.cart.push(this.product.id)
+                    if (this.canAddToCart == true) {
+                        this.product.availableInventory = this.product.availableInventory - 1;
+                        this.cart.push(this.product.id)
                     }
                 },
                 showCheckout() {
                     this.showProduct = this.showProduct ? false : true;
-                }
+                },
+                submitForm() { alert('order submitted!') },
 
             },
             computed: {
@@ -63,11 +151,11 @@
                     return this.cart.length || "";
                 },
                 canAddToCart: function () {
-                        return this.product.availableInventory > 0;
-                    }
+                    return this.product.availableInventory > 0;
                 }
+            }
 
-            })
+        })
     </script>
 </body>
 
