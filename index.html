@@ -6,35 +6,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title Pet Depot></title>
     <script src="https://unpkg.com/vue"></script>
+    <script src="products.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
     <div id="app">
         <header>
             <h1 v-text='sitename'> </h1>
-            <button @click='showCheckout'> {{cartItemCount}} <span class="fas fa-cart-plus"></span>Checkout</button>
             <br>
             <br>
         </header>
+
         <div v-if='showProduct'>
-            <img v-bind:src='product.image'>
-            <h2 v-text='product.title'></h2>
-            <p v-html='product.location'></p>
-            <p> Stock: {{product.availableInventory}}</p>
-            <p> Price: £{{product.price}}</p>
-            <button @click="addToCart" v-if="canAddToCart"> Add to cart </button>
-            <button disabled='disabled' v-else> Add to cart </button>
-            <span v-if="product.availableInventory === 0"> 
-                All out!!!
-            </span>
-            <span v-else-if="product.availableInventory <= 5 "> 
-                Only {{product.availableInventory}} left!
-            </span>
-            <span v-else>Buy now!!</span>
-            <p><span v-for="n in product.rating" >✭</span><span v-for="n in 5-product.rating" >☆</span></p>
-            
+            <section class="product">
+                <div class="p-heading">
+                    <h2>
+                        <font>After </font>School Club
+                    </h2>
+                </div>
+                <div class="product-container">
+                    <h3>search product<input v-model="filterText" /></h3>
+                    <button class="basket" @click='showCheckout'> {{this.cart.length}} <span
+                            class="fas fa-cart-plus"></span>Checkout</button>
+
+                    <input type="radio" v-on:change=norml(sort.option) id="price" value="price"
+                        v-model="sort.attributes">
+                    <label for="price">price</label>
+                    <input type="radio" v-on:change=norml(sort.option) id="location" value="location"
+                        v-model="sort.attributes">
+                    <label for="location">Location</label>
+
+                    <input type="radio" v-on:change="sortLow(sort.attributes)" id="decending" value="decending"
+                        v-model="sort.option">
+                    <label for="decending">decending</label>
+                    <input type="radio" v-on:change="sortHigh(sort.attributes)" id="acending" value="acending"
+                        v-model="sort.option">
+                    <label for="acending">acending</label>
+
+
+                    <button class="priceLow" @click="sortLow()">price decending</button>
+                    <button class="priceHigh" @click="sortHigh()">price acending</button>
+                    <button class="priceDefault" @click="norml()">Default</button>
+
+                    <!-- <div v-for="product in sortedProducts"> -->
+                    <div v-for="product in products">
+                        <div class="p-box">
+                            <img v-bind:src='product.image'>
+                            <h2 v-text='product.title'></h2>
+                            <p>Location: {{product.location}}</p>
+                            <p> Stock: {{product.availableInventory- cartCount(product.id)}}</p>
+                            <p> Price: £{{product.price}}</p>
+                            <span v-if="product.availableInventory === cartCount(product.id)">
+                                All out!!!
+                            </span>
+                            <span v-else-if="product.availableInventory - cartCount(product.id) <= 5 ">
+                                Only {{product.availableInventory- cartCount(product.id)}} left!
+                            </span>
+                            <span v-else>Buy now!!</span>
+                            <p>
+                                <span v-for="n in product.rating" class="fas fa-star"></span>
+                                <span v-for="n in 5-product.rating" class="far fa-star"></span>
+                            </p>
+                            <button class="buy-btn" @click="addToCart(product)" v-if="canAddToCart(product)"> Add to
+                                cart </button>
+                            <button disabled='disabled' v-else> Add to cart </button>
+                        </div>
+                    </div>
+
+                    <tr v-for="entry in filteredFilms">
+                        <td v-for="key in products">
+                        {{entry[key]}}
+                        </td>
+                        </tr>
+
+                </div>
+            </section>
         </div>
         <div v-else>
             <h2>Checkout</h2>
@@ -64,7 +112,7 @@
 
                 </select>
             </p>
-            <p><strong>Zip/Postal Code:</strong> <input v-model.number="order.zip" type="number"/></p>
+            <p><strong>Zip/Postal Code:</strong> <input v-model.number="order.zip" type="number" /></p>
 
             <p>
                 <input type="checkbox" id="gift" value="true" v-model="order.gift" :true-value="order.sendGift">
@@ -111,8 +159,13 @@
                     state: "",
                     method: 'Home',
                     gift: false,
-                    sendGift:"send gift pls",
-                    dontSendGift:"dont send me shyt",
+                    sendGift: "send gift pls",
+                    dontSendGift: "dont send me shyt",
+
+                },
+                sort: {
+                    attributes: "",
+                    option: "",
                 },
                 states: {
                     AL: "apple",
@@ -120,42 +173,131 @@
                     CA: "canada",
                     NV: "new veiw",
                 },
-                product: {
-                    id: 1001,
-                    title: "Maths",
-                    location: "London",
-                    price: 200,
-                    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7ns5xJEixf6hWBaNrruZH1XvGS6wqGzf_GA&usqp=CAU",
-                    availableInventory: 10,
-                    rating:3,
-                },
+                // product: {
+                //     id: 1001,
+                //     title: "Maths",
+                //     location: "London",
+                //     price: 200,
+                //     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7ns5xJEixf6hWBaNrruZH1XvGS6wqGzf_GA&usqp=CAU",
+                //     availableInventory: 10,
+                //     rating:3,
+                // },
+                products: products,
                 cart: [],
                 showProduct: true,
+                filterText: "",
             },
 
             methods: {
-                addToCart: function () {
-                    if (this.canAddToCart == true) {
-                        this.product.availableInventory = this.product.availableInventory - 1;
-                        this.cart.push(this.product.id)
-                    }
+                addToCart(product) {
+                    // if (this.canAddToCart == true) {
+                    // this.product.availableInventory = this.product.availableInventory - 1;
+                    this.cart.push(product.id)
+                    // }
                 },
                 showCheckout() {
                     this.showProduct = this.showProduct ? false : true;
                 },
                 submitForm() { alert('order submitted!') },
+                canAddToCart(product) {
+                    return product.availableInventory > this.cartCount(product.id);
+                },
+                cartCount(id) {
+                    let count = 0;
+                    for (let i = 0; i < this.cart.length; i++) {
+                        if (this.cart[i] === id) {
+                            count++;
+                        }
+                    }
+                    return count;
+                },
+
+                sortLow(n) {
+
+                    // this.products.sort((a,b) => a.price > b.price ? 1 : -1);
+                    // let productsArray = this.products.slice(0);
+                    if (n == "price") {
+                        function compare(a, b) {
+                            if (a.price > b.price)
+                                return 1;
+                            if (a.price < b.price)
+                                return -1;
+                            return 0;
+                        }
+                    }
+                    else if (n == "location") {
+                        function compare(a, b) {
+                            if (a.location > b.location)
+                                return 1;
+                            if (a.location < b.location)
+                                return -1;
+                            return 0;
+                        }
+                    }
+                    return this.products.sort(compare);
+
+                },
+                sortHigh(n) {
+
+                    // let productsArray = this.products.slice(0);
+                    if (n == "price") {
+                        function compare(a, b) {
+                            if (a.price > b.price)
+                                return -1;
+                            if (a.price < b.price)
+                                return 1;
+                            return 0;
+                        }
+                    }
+
+                    else if (n == "location") {
+                        function compare(a, b) {
+                            if (a.location > b.location)
+                                return -1;
+                            if (a.location < b.location)
+                                return 1;
+                            return 0;
+                        }
+                    }
+                    return this.products.sort(compare);
+
+                },
+                norml(n) {
+                    if (n == "decending") {
+                        this.sortLow(this.sort.attributes)
+                    }
+                    else if (n == "acending") {
+                        this.sortHigh(this.sort.attributes)
+                    }
+                }
 
             },
             computed: {
-                cartItemCount: function () {
-                    return this.cart.length || "";
-                },
-                canAddToCart: function () {
-                    return this.product.availableInventory > 0;
-                }
-            }
+                // cartItemCount: function () {
+                //     return this.cart.length || "";
+                // },
+                // canAddToCart: function () {
+                //     return this.product.availableInventory > 0;
+                // }
 
-        })
+                filteredFilms() {
+                    let filter = new RegExp(this.filterText, 'i')
+                    return this.products.filter(el => el.title.match(filter))
+                },
+                    sortedProducts() {
+                        let productsArray = this.products.slice(0);
+                        function compare(a, b) {
+                            if (a.price > b.price)
+                                return -1;
+                            if (a.price < b.price)
+                                return 1;
+                            return 0;
+                        }
+                        return productsArray.sort(compare);
+                    },
+                },
+
+            });
     </script>
 </body>
 

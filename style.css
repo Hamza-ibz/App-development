@@ -67,10 +67,28 @@ body{
 }
 
 /* sorting drop down */
-.row{
+.priceLow{
 	position: absolute;
 	top:4%;
 	right:10%;
+}
+
+.priceHigh{
+	position: absolute;
+	top:4%;
+	right:30%;
+}
+
+.priceDefault{
+    position: absolute;
+	top:4%;
+	right:50%;
+}
+
+.basket{
+	position: absolute;
+	top:4%;
+	right:80%;
 }
 
 
