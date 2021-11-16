@@ -27,9 +27,12 @@
                     </h2>
                 </div>
                 <div class="product-container">
-                    <h3>search product<input v-model="filterText" /></h3>
-                    <button class="basket" @click='showCheckout'> {{this.cart.length}} <span
-                            class="fas fa-cart-plus"></span>Checkout</button>
+                    <input type="text" v-model="search" placeholder="search products" />
+                    <!-- <h3>search product<input v-model="filterText" /></h3> -->
+                    <button class="basket" @click='showCheckout' v-if="this.cart.length > 0"> {{this.cart.length}} <span
+                            class="fas fa-cart-plus"></span>Shopping cart</button>
+                    <button class="basket" disabled='disabled' v-else> <span class="fas fa-cart-plus"></span>Shopping
+                        cart</button>
 
                     <input type="radio" v-on:change=norml(sort.option) id="price" value="price"
                         v-model="sort.attributes">
@@ -37,13 +40,19 @@
                     <input type="radio" v-on:change=norml(sort.option) id="location" value="location"
                         v-model="sort.attributes">
                     <label for="location">Location</label>
+                    <input type="radio" v-on:click=norml(sort.option) v-on:change=norml(sort.option)
+                        id="availableInventory" value="availableInventory" v-model="sort.attributes">
+                    <label for="availableInventory">availableInventory</label>
+                    <input type="radio" v-on:change=norml(sort.option) id="title" value="title"
+                        v-model="sort.attributes">
+                    <label for="title">title</label>
 
-                    <input type="radio" v-on:change="sortLow(sort.attributes)" id="decending" value="decending"
+                    <input type="radio" v-on:click="sortLow(sort.attributes)" id="decending" value="decending"
                         v-model="sort.option">
-                    <label for="decending">decending</label>
-                    <input type="radio" v-on:change="sortHigh(sort.attributes)" id="acending" value="acending"
+                    <label for="decending">acending</label>
+                    <input type="radio" v-on:click="sortHigh(sort.attributes)" id="acending" value="acending"
                         v-model="sort.option">
-                    <label for="acending">acending</label>
+                    <label for="acending">decending</label>
 
 
                     <button class="priceLow" @click="sortLow()">price decending</button>
@@ -51,18 +60,23 @@
                     <button class="priceDefault" @click="norml()">Default</button>
 
                     <!-- <div v-for="product in sortedProducts"> -->
-                    <div v-for="product in products">
+                    <div v-for="product in filteredProducts">
                         <div class="p-box">
                             <img v-bind:src='product.image'>
                             <h2 v-text='product.title'></h2>
                             <p>Location: {{product.location}}</p>
-                            <p> Stock: {{product.availableInventory- cartCount(product.id)}}</p>
+                            <p> Stock: {{product.availableInventory}}</p>
+                            <!-- <p> Stock: {{product.availableInventory- cartCount(product.id)}}</p> -->
                             <p> Price: £{{product.price}}</p>
-                            <span v-if="product.availableInventory === cartCount(product.id)">
+                            <!-- <span v-if="product.availableInventory === cartCount(product.id)"> -->
+                            <span v-if="product.availableInventory === 0">
+
                                 All out!!!
                             </span>
-                            <span v-else-if="product.availableInventory - cartCount(product.id) <= 5 ">
-                                Only {{product.availableInventory- cartCount(product.id)}} left!
+                            <!-- <span v-else-if="product.availableInventory - cartCount(product.id) <= 3 "> -->
+                            <span v-else-if="product.availableInventory <= 3 ">
+                                Only {{product.availableInventory}} left!
+                                <!-- Only {{product.availableInventory- cartCount(product.id)}} left! -->
                             </span>
                             <span v-else>Buy now!!</span>
                             <p>
@@ -75,24 +89,49 @@
                         </div>
                     </div>
 
-                    <tr v-for="entry in filteredFilms">
+                    <!-- <tr v-for="entry in filteredFilms">
                         <td v-for="key in products">
                         {{entry[key]}}
                         </td>
-                        </tr>
+                        </tr> -->
 
                 </div>
             </section>
         </div>
         <div v-else>
-            <h2>Checkout</h2>
+            <section class="product">
+                <div class="product-container">
+                    <button class="basket" @click='showCheckout'> {{this.cart.length}} <span
+                            class="fas fa-cart-plus"></span>Checkout</button>
 
-            <p>
-                <strong>First Name:</strong>
-                <input v-model.trim="order.firstName" />
-            </p>
+                    <div v-for="(x,index) in cart" :key="cart.title">
+                        <div class="p-box">
+                            <img v-bind:src='x.image'>
+                            <h2 v-text='x.title'></h2>
+                            <p>Location: {{x.location}}</p>
+                            <p> Price: £{{x.price}}</p>
+                            <!-- <p> Stock: {{x.availableInventory}}</p> -->
+                            <button class="remove-btn" @click="removeToCart(index,x.id)"> remove to
+                                cart </button>
+                        </div>
+                    </div>
+                </div>
+                <h2>Checkout</h2>
 
-            <p>
+                <p>
+                    <strong>First Name:</strong>
+                    <input type="text" v-model.trim="order.firstName" v-on:keypress="isLetter($event)" />
+                </p>
+
+                <p>
+                    <strong>Last Name:</strong>
+                    <input v-model.trim=" order.lastName" v-on:keypress="isLetter($event)" />
+                </p>
+
+                <strong>Phone number</strong>
+                <input v-model.trim="phone_value" type="text" @input="acceptNumber">
+
+                <!-- <p>
                 <strong>Last Name:</strong>
                 <input v-model.trim="order.lastName" />
             </p>
@@ -103,10 +142,10 @@
                 <strong>State:</strong>
                 <select v-model="order.state">
                     <option disabled value="">State</option>
-                    <!-- <option v-bind:value="states.AL">AL</option>
+                    <option v-bind:value="states.AL">AL</option>
                     <option v-bind:value="states.AR">AR</option>
                     <option v-bind:value="states.CA">CA</option>
-                    <option v-bind:value="states.NV">NV</option> -->
+                    <option v-bind:value="states.NV">NV</option>
 
                     <option v-for='(state, key) in states' :value='key'>{{state}}</option>
 
@@ -132,18 +171,20 @@
             <p>city: {{order.city}}</p>
             <p>state: {{order.state}}</p>
             <p>zip: {{order.zip}}</p>
-            <p>ship as gift?:{{order.gift}}</p>
+            <p>ship as gift?:{{order.gift}}</p> -->
 
-            <!-- <p>
+                <!-- <p>
                 <input type="checkbox" id="gift" value="true" v-model="order.gift" v-bind:true-value="order.sendGift" v-bind: false-value="order.dontSendGift">
             </p> -->
 
 
 
-            <button v-on:click="submitForm">Place Order</button>
+                <button :disabled="checkoutDisable(this.order.firstName,this.order.lastName,this.phone_value)" v-on:click="submitForm">Checkout</button>
 
 
+            </section>
         </div>
+
     </div>
     <script>
         let webstore = new Vue({
@@ -164,7 +205,7 @@
 
                 },
                 sort: {
-                    attributes: "",
+                    attributes: "price",
                     option: "",
                 },
                 states: {
@@ -185,31 +226,76 @@
                 products: products,
                 cart: [],
                 showProduct: true,
-                filterText: "",
+                // filterText: "",
+                search: "",
+                phone_value: "",
             },
 
             methods: {
+
+                acceptNumber() {
+                    var x = this.phone_value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
+                    this.phone_value = !x[2] ? x[1] : x[1] + x[2] + (x[3] ? + x[3] : '');
+                },
+                isLetter(e) {
+                    let char = String.fromCharCode(e.keyCode); // Get the character
+                    if (/^[A-Za-z]+$/.test(char)) return true; // Match with regex 
+                    else e.preventDefault(); // If not match, don't add to input text
+                },
                 addToCart(product) {
                     // if (this.canAddToCart == true) {
-                    // this.product.availableInventory = this.product.availableInventory - 1;
-                    this.cart.push(product.id)
+                    product.availableInventory = product.availableInventory - 1;
+                    this.cart.push(product)
                     // }
+                },
+                removeToCart(index, d) {
+                    // for (let i = 0; i < this.cart.length; i++) {
+                    // if (this.cart[i].id === id) {
+
+                    //     }
+                    // };
+                    // this.cart.splice(index,1);
+                    for (let i = 0; i < this.products.length; i++) {
+                        // if (this.cart[i].id === his.products[i].id) {
+                        //     this.cart.splice(i,1);
+                        // }
+                        if (this.products[i].id === d) {
+                            this.products[i].availableInventory = this.products[i].availableInventory + 1;
+                            // console.log(this.products[i].availableInventory);
+                        }
+                    };
+                    this.cart.splice(index, 1);
+
                 },
                 showCheckout() {
                     this.showProduct = this.showProduct ? false : true;
                 },
                 submitForm() { alert('order submitted!') },
+
+                checkoutDisable(first,second,phone){
+                    if(first.length>0 && second.length>0 && phone.length>0){
+                        return false;
+                    }
+                    else{
+                        return true;
+                    }
+
+                },
+
                 canAddToCart(product) {
-                    return product.availableInventory > this.cartCount(product.id);
+                    // product.availableInventory = 
+                    // return product.availableInventory > this.cartCount(product.id);
+                    return product.availableInventory > 0;
                 },
                 cartCount(id) {
                     let count = 0;
                     for (let i = 0; i < this.cart.length; i++) {
-                        if (this.cart[i] === id) {
+                        if (this.cart[i].id === id) {
                             count++;
                         }
                     }
                     return count;
+
                 },
 
                 sortLow(n) {
@@ -230,6 +316,28 @@
                             if (a.location > b.location)
                                 return 1;
                             if (a.location < b.location)
+                                return -1;
+                            return 0;
+                        }
+                    }
+                    else if (n == "availableInventory") {
+                        function compare(a, b) {
+                            if (a.availableInventory > b.availableInventory)
+                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
+                                return 1;
+                            if (a.availableInventory < b.availableInventory)
+                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
+                                return -1;
+                            return 0;
+                        }
+                    }
+                    else if (n == "title") {
+                        function compare(a, b) {
+                            if (a.title > b.title)
+                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
+                                return 1;
+                            if (a.title < b.title)
+                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
                                 return -1;
                             return 0;
                         }
@@ -259,6 +367,28 @@
                             return 0;
                         }
                     }
+                    else if (n == "availableInventory") {
+                        function compare(a, b) {
+                            if (a.availableInventory > b.availableInventory)
+                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
+                                return -1;
+                            if (a.availableInventory < b.availableInventory)
+                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
+                                return 1;
+                            return 0;
+                        }
+                    }
+                    else if (n == "title") {
+                        function compare(a, b) {
+                            if (a.title > b.title)
+                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
+                                return -1;
+                            if (a.title < b.title)
+                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
+                                return 1;
+                            return 0;
+                        }
+                    }
                     return this.products.sort(compare);
 
                 },
@@ -280,24 +410,31 @@
                 //     return this.product.availableInventory > 0;
                 // }
 
-                filteredFilms() {
-                    let filter = new RegExp(this.filterText, 'i')
-                    return this.products.filter(el => el.title.match(filter))
-                },
-                    sortedProducts() {
-                        let productsArray = this.products.slice(0);
-                        function compare(a, b) {
-                            if (a.price > b.price)
-                                return -1;
-                            if (a.price < b.price)
-                                return 1;
-                            return 0;
-                        }
-                        return productsArray.sort(compare);
-                    },
+                // filteredFilms() {
+                //     let filter = new RegExp(this.filterText, 'i')
+                //     return this.products.filter(el => el.title.match(filter))
+                // },
+
+                filteredProducts: function () {
+                    return this.products.filter((product) => {
+                        return product.title.toLowerCase().match(this.search.toLowerCase());
+                    });
                 },
 
-            });
+                sortedProducts() {
+                    let productsArray = this.products.slice(0);
+                    function compare(a, b) {
+                        if (a.price > b.price)
+                            return -1;
+                        if (a.price < b.price)
+                            return 1;
+                        return 0;
+                    }
+                    return productsArray.sort(compare);
+                },
+            },
+
+        });
     </script>
 </body>
 
