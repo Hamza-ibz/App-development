@@ -27,73 +27,85 @@
                     </h2>
                 </div>
                 <div class="product-container">
-                    <input type="text" v-model="search" placeholder="search products" />
-                    <!-- <h3>search product<input v-model="filterText" /></h3> -->
+                    <p>
+                        <!-- 
+                        Search (as you type) and Shopping cart 
+                        The shopping cart button only enabled after at least one lesson is added to cart
+                        -->
+                    <input type="text" v-model="search" placeholder="search" class="search"/>
                     <button class="basket" @click='showCheckout' v-if="this.cart.length > 0"> {{this.cart.length}} <span
                             class="fas fa-cart-plus"></span>Shopping cart</button>
                     <button class="basket" disabled='disabled' v-else> <span class="fas fa-cart-plus"></span>Shopping
                         cart</button>
-
-                    <input type="radio" v-on:change=norml(sort.option) id="price" value="price"
+                    <br>
+                    <!-- 
+                        User can choose to sort the lessons by one of the following attributes: subject,
+                        location, price, or availability;
+                     -->
+                    <input type="radio" v-on:change=sort_a_d(sort.option) id="price" value="price"
                         v-model="sort.attributes">
-                    <label for="price">price</label>
-                    <input type="radio" v-on:change=norml(sort.option) id="location" value="location"
+                    <label for="price">Price</label>
+                    <input type="radio" v-on:click=sort_a_d(sort.option) v-on:change=sort_a_d(sort.option) id="location" value="location"
                         v-model="sort.attributes">
                     <label for="location">Location</label>
-                    <input type="radio" v-on:click=norml(sort.option) v-on:change=norml(sort.option)
+                    <input type="radio" v-on:click=sort_a_d(sort.option) v-on:change=sort_a_d(sort.option)
                         id="availableInventory" value="availableInventory" v-model="sort.attributes">
-                    <label for="availableInventory">availableInventory</label>
-                    <input type="radio" v-on:change=norml(sort.option) id="title" value="title"
+                    <label for="availableInventory">Spaces</label>
+                    <input type="radio" v-on:change=sort_a_d(sort.option) id="title" value="title"
                         v-model="sort.attributes">
-                    <label for="title">title</label>
-
-                    <input type="radio" v-on:click="sortLow(sort.attributes)" id="decending" value="decending"
+                    <label for="title">Subject</label>
+                    <br>
+                    <!-- 
+                        There is an option to sort in ascending or descending order, regardless of the attribute selected;
+                    -->
+                    <input type="radio" v-on:click="sortLowToHigh(sort.attributes)" id="acending" value="acending"
                         v-model="sort.option">
-                    <label for="decending">acending</label>
-                    <input type="radio" v-on:click="sortHigh(sort.attributes)" id="acending" value="acending"
+                    <label for="acending">acending</label>
+                    <input type="radio" v-on:click="sortHighToLow(sort.attributes)" id="decending" value="decending"
                         v-model="sort.option">
-                    <label for="acending">decending</label>
+                    <label for="decending">decending</label>
 
-
-                    <button class="priceLow" @click="sortLow()">price decending</button>
-                    <button class="priceHigh" @click="sortHigh()">price acending</button>
-                    <button class="priceDefault" @click="norml()">Default</button>
-
-                    <!-- <div v-for="product in sortedProducts"> -->
+                    </p>
+                    <!-- 
+                        10 lessons and each lesson has 5 spaces
+                        Each lesson has Subject, Location,Price,Space (how many spaces are left),A Font Awesome icon,
+                        An image.
+                        v-for used for the display of the lesson list. 
+                        "filteredProducts" used to filter lessons regarding with search
+                     -->
                     <div v-for="product in filteredProducts">
                         <div class="p-box">
                             <img v-bind:src='product.image'>
-                            <h2 v-text='product.title'></h2>
+                            <h2>Subject: {{product.title}}</h2>
                             <p>Location: {{product.location}}</p>
-                            <p> Stock: {{product.availableInventory}}</p>
-                            <!-- <p> Stock: {{product.availableInventory- cartCount(product.id)}}</p> -->
                             <p> Price: £{{product.price}}</p>
-                            <!-- <span v-if="product.availableInventory === cartCount(product.id)"> -->
+                            <p> Spaces: {{product.availableInventory}}</p>
                             <span v-if="product.availableInventory === 0">
-
                                 All out!!!
                             </span>
-                            <!-- <span v-else-if="product.availableInventory - cartCount(product.id) <= 3 "> -->
                             <span v-else-if="product.availableInventory <= 3 ">
                                 Only {{product.availableInventory}} left!
-                                <!-- Only {{product.availableInventory- cartCount(product.id)}} left! -->
                             </span>
                             <span v-else>Buy now!!</span>
                             <p>
                                 <span v-for="n in product.rating" class="fas fa-star"></span>
                                 <span v-for="n in 5-product.rating" class="far fa-star"></span>
                             </p>
+                            <!-- 
+                                Each lesson has a ’Add to Cart’ button
+                                The button is only enabled when space is larger than 0
+                                Clicking the button once will add one space to the shopping cart, reducing the 
+                                remaining space by one
+                                Once there is no more space, i.e., space = 0, the ’Add to cart’ button is
+                                disabled but still visible, i.e., clicking it will not further reduce ‘space’ or add lesson
+                                to the cart.
+                             -->
+
                             <button class="buy-btn" @click="addToCart(product)" v-if="canAddToCart(product)"> Add to
                                 cart </button>
                             <button disabled='disabled' v-else> Add to cart </button>
                         </div>
                     </div>
-
-                    <!-- <tr v-for="entry in filteredFilms">
-                        <td v-for="key in products">
-                        {{entry[key]}}
-                        </td>
-                        </tr> -->
 
                 </div>
             </section>
@@ -101,23 +113,38 @@
         <div v-else>
             <section class="product">
                 <div class="product-container">
+                    <!-- 
+                        Clicking the shopping cart button shows the cart, and clicking the button
+                        again goes back to the lesson page;
+                     -->
                     <button class="basket" @click='showCheckout'> {{this.cart.length}} <span
-                            class="fas fa-cart-plus"></span>Checkout</button>
-
-                    <div v-for="(x,index) in cart" :key="cart.title">
+                            class="fas fa-cart-plus"></span>Shopping cart</button>
+                            <!-- 
+                                for loop going through the cart items and dispalying lesson, location and price
+                             -->
+                    <div v-for="(basket,index) in cart" :key="cart.title">
                         <div class="p-box">
-                            <img v-bind:src='x.image'>
-                            <h2 v-text='x.title'></h2>
-                            <p>Location: {{x.location}}</p>
-                            <p> Price: £{{x.price}}</p>
-                            <!-- <p> Stock: {{x.availableInventory}}</p> -->
-                            <button class="remove-btn" @click="removeToCart(index,x.id)"> remove to
-                                cart </button>
+                            <img v-bind:src='basket.image'>
+                            <h2 v-text='basket.title'></h2>
+                            <p>Location: {{basket.location}}</p>
+                            <p> Price: £{{basket.price}}</p>
+                            <!-- 
+                                User can remove lesson from shopping cart; the removed lesson is
+                                added back to the lesson list.
+                             -->
+                            <button class="remove-btn" @click="removeToCart(index,basket.id)"> remove from cart </button>
                         </div>
                     </div>
                 </div>
+                <!-- 
+                    The checkout is part of the shopping cart page;
+                    A user must provide ‘Name’ and ‘Phone number’ before he/she can check out;
+                 -->
                 <h2>Checkout</h2>
-
+                <!-- 
+                    user only can type letters in the "first" and "second" name and the user can only type numbers in the 
+                    ’Phone number’. the check is done using regular expressions;
+                 -->
                 <p>
                     <strong>First Name:</strong>
                     <input type="text" v-model.trim="order.firstName" v-on:keypress="isLetter($event)" />
@@ -125,59 +152,17 @@
 
                 <p>
                     <strong>Last Name:</strong>
-                    <input v-model.trim=" order.lastName" v-on:keypress="isLetter($event)" />
+                    <input type="text" v-model.trim=" order.lastName" v-on:keypress="isLetter($event)" />
                 </p>
 
                 <strong>Phone number</strong>
                 <input v-model.trim="phone_value" type="text" @input="acceptNumber">
 
-                <!-- <p>
-                <strong>Last Name:</strong>
-                <input v-model.trim="order.lastName" />
-            </p>
-
-            <p><strong>Address:</strong> <input v-model="order.address" /></p>
-            <p><strong>City:</strong> <input v-model="order.city" /></p>
-            <p>
-                <strong>State:</strong>
-                <select v-model="order.state">
-                    <option disabled value="">State</option>
-                    <option v-bind:value="states.AL">AL</option>
-                    <option v-bind:value="states.AR">AR</option>
-                    <option v-bind:value="states.CA">CA</option>
-                    <option v-bind:value="states.NV">NV</option>
-
-                    <option v-for='(state, key) in states' :value='key'>{{state}}</option>
-
-                </select>
-            </p>
-            <p><strong>Zip/Postal Code:</strong> <input v-model.number="order.zip" type="number" /></p>
-
-            <p>
-                <input type="checkbox" id="gift" value="true" v-model="order.gift" :true-value="order.sendGift">
-                <label for="gift">Ship as Gift?</label>
-            </p>
-            <p>
-                <input type="radio" id="home" value="Home" v-model="order.method">
-                <label for="home">Home</label>
-                <input type="radio" id="business" value="Business" v-model="order.method">
-                <label for="business">Business</label>
-            </p>
-
-            <h2>order Information</h2>
-            <p>First Name: {{order.firstName}}</p>
-            <p>Last Name: {{order.lastName}}</p>
-            <p>address: {{order.address}}</p>
-            <p>city: {{order.city}}</p>
-            <p>state: {{order.state}}</p>
-            <p>zip: {{order.zip}}</p>
-            <p>ship as gift?:{{order.gift}}</p> -->
-
-                <!-- <p>
-                <input type="checkbox" id="gift" value="true" v-model="order.gift" v-bind:true-value="order.sendGift" v-bind: false-value="order.dontSendGift">
-            </p> -->
-
-
+                <!-- 
+                    The ’checkout’ button is only enabled after valid ’name’ and ’phone’ are provided;
+                    Clicking the ’checkout’ button displays a message confirming the order has
+                    been submitted.
+                 -->
 
                 <button :disabled="checkoutDisable(this.order.firstName,this.order.lastName,this.phone_value)" v-on:click="submitForm">Checkout</button>
 
@@ -186,256 +171,7 @@
         </div>
 
     </div>
-    <script>
-        let webstore = new Vue({
-            el: '#app',
-            data: {
-                sitename: 'After School Club',
-                order: {
-                    firstName: "",
-                    lastName: "",
-                    address: "",
-                    city: "",
-                    zip: "",
-                    state: "",
-                    method: 'Home',
-                    gift: false,
-                    sendGift: "send gift pls",
-                    dontSendGift: "dont send me shyt",
-
-                },
-                sort: {
-                    attributes: "price",
-                    option: "",
-                },
-                states: {
-                    AL: "apple",
-                    AR: "arinak",
-                    CA: "canada",
-                    NV: "new veiw",
-                },
-                // product: {
-                //     id: 1001,
-                //     title: "Maths",
-                //     location: "London",
-                //     price: 200,
-                //     image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7ns5xJEixf6hWBaNrruZH1XvGS6wqGzf_GA&usqp=CAU",
-                //     availableInventory: 10,
-                //     rating:3,
-                // },
-                products: products,
-                cart: [],
-                showProduct: true,
-                // filterText: "",
-                search: "",
-                phone_value: "",
-            },
-
-            methods: {
-
-                acceptNumber() {
-                    var x = this.phone_value.replace(/\D/g, '').match(/(\d{0,3})(\d{0,3})(\d{0,4})/);
-                    this.phone_value = !x[2] ? x[1] : x[1] + x[2] + (x[3] ? + x[3] : '');
-                },
-                isLetter(e) {
-                    let char = String.fromCharCode(e.keyCode); // Get the character
-                    if (/^[A-Za-z]+$/.test(char)) return true; // Match with regex 
-                    else e.preventDefault(); // If not match, don't add to input text
-                },
-                addToCart(product) {
-                    // if (this.canAddToCart == true) {
-                    product.availableInventory = product.availableInventory - 1;
-                    this.cart.push(product)
-                    // }
-                },
-                removeToCart(index, d) {
-                    // for (let i = 0; i < this.cart.length; i++) {
-                    // if (this.cart[i].id === id) {
-
-                    //     }
-                    // };
-                    // this.cart.splice(index,1);
-                    for (let i = 0; i < this.products.length; i++) {
-                        // if (this.cart[i].id === his.products[i].id) {
-                        //     this.cart.splice(i,1);
-                        // }
-                        if (this.products[i].id === d) {
-                            this.products[i].availableInventory = this.products[i].availableInventory + 1;
-                            // console.log(this.products[i].availableInventory);
-                        }
-                    };
-                    this.cart.splice(index, 1);
-
-                },
-                showCheckout() {
-                    this.showProduct = this.showProduct ? false : true;
-                },
-                submitForm() { alert('order submitted!') },
-
-                checkoutDisable(first,second,phone){
-                    if(first.length>0 && second.length>0 && phone.length>0){
-                        return false;
-                    }
-                    else{
-                        return true;
-                    }
-
-                },
-
-                canAddToCart(product) {
-                    // product.availableInventory = 
-                    // return product.availableInventory > this.cartCount(product.id);
-                    return product.availableInventory > 0;
-                },
-                cartCount(id) {
-                    let count = 0;
-                    for (let i = 0; i < this.cart.length; i++) {
-                        if (this.cart[i].id === id) {
-                            count++;
-                        }
-                    }
-                    return count;
-
-                },
-
-                sortLow(n) {
-
-                    // this.products.sort((a,b) => a.price > b.price ? 1 : -1);
-                    // let productsArray = this.products.slice(0);
-                    if (n == "price") {
-                        function compare(a, b) {
-                            if (a.price > b.price)
-                                return 1;
-                            if (a.price < b.price)
-                                return -1;
-                            return 0;
-                        }
-                    }
-                    else if (n == "location") {
-                        function compare(a, b) {
-                            if (a.location > b.location)
-                                return 1;
-                            if (a.location < b.location)
-                                return -1;
-                            return 0;
-                        }
-                    }
-                    else if (n == "availableInventory") {
-                        function compare(a, b) {
-                            if (a.availableInventory > b.availableInventory)
-                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
-                                return 1;
-                            if (a.availableInventory < b.availableInventory)
-                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
-                                return -1;
-                            return 0;
-                        }
-                    }
-                    else if (n == "title") {
-                        function compare(a, b) {
-                            if (a.title > b.title)
-                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
-                                return 1;
-                            if (a.title < b.title)
-                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
-                                return -1;
-                            return 0;
-                        }
-                    }
-                    return this.products.sort(compare);
-
-                },
-                sortHigh(n) {
-
-                    // let productsArray = this.products.slice(0);
-                    if (n == "price") {
-                        function compare(a, b) {
-                            if (a.price > b.price)
-                                return -1;
-                            if (a.price < b.price)
-                                return 1;
-                            return 0;
-                        }
-                    }
-
-                    else if (n == "location") {
-                        function compare(a, b) {
-                            if (a.location > b.location)
-                                return -1;
-                            if (a.location < b.location)
-                                return 1;
-                            return 0;
-                        }
-                    }
-                    else if (n == "availableInventory") {
-                        function compare(a, b) {
-                            if (a.availableInventory > b.availableInventory)
-                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
-                                return -1;
-                            if (a.availableInventory < b.availableInventory)
-                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
-                                return 1;
-                            return 0;
-                        }
-                    }
-                    else if (n == "title") {
-                        function compare(a, b) {
-                            if (a.title > b.title)
-                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
-                                return -1;
-                            if (a.title < b.title)
-                                // console.log("a"+a.availableInventory+"\n"+"b"+b.availableInventory);
-                                return 1;
-                            return 0;
-                        }
-                    }
-                    return this.products.sort(compare);
-
-                },
-                norml(n) {
-                    if (n == "decending") {
-                        this.sortLow(this.sort.attributes)
-                    }
-                    else if (n == "acending") {
-                        this.sortHigh(this.sort.attributes)
-                    }
-                }
-
-            },
-            computed: {
-                // cartItemCount: function () {
-                //     return this.cart.length || "";
-                // },
-                // canAddToCart: function () {
-                //     return this.product.availableInventory > 0;
-                // }
-
-                // filteredFilms() {
-                //     let filter = new RegExp(this.filterText, 'i')
-                //     return this.products.filter(el => el.title.match(filter))
-                // },
-
-                filteredProducts: function () {
-                    return this.products.filter((product) => {
-                        return product.title.toLowerCase().match(this.search.toLowerCase());
-                    });
-                },
-
-                sortedProducts() {
-                    let productsArray = this.products.slice(0);
-                    function compare(a, b) {
-                        if (a.price > b.price)
-                            return -1;
-                        if (a.price < b.price)
-                            return 1;
-                        return 0;
-                    }
-                    return productsArray.sort(compare);
-                },
-            },
-
-        });
-    </script>
+    <script src="vue.js"></script>
 </body>
 
 </html>

@@ -12,45 +12,9 @@ body{
 
 
 /*---search bar---*/
-.side-box{
-    position: absolute;
-    left: 29%;
-    top:50px;
-    width: 250px;
-    height: 50px;
-    background-color: #FFFFFF;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 10% 10% 10% 10%/50% 50% 50% 50%;
-    box-shadow: 0 0 20px 9px rgba(167,158,245,0.2);
-    border:1px solid rgba(167,158,245,0.2);
+.search{
+	margin: 50px 100px;
 }
-
-.search input{
-    width:150px;
-    height: 20px;
-    border: none;
-    outline: none;
-    background-color: transparent;
-    color: #1f1f1f;
-    font-size: 1rem;
-    padding: 0px 10px;
-}
-
-.search input:placeholder{
-    color: #1d1d1d;
-    font-weight: 400;
-    font-size: 0.8rem;
-    font-family: poppins;
-}
-
-.search i{
-    margin:50px auto;
-}
-
-
-
 
 /* products within all pages */
 .product{
