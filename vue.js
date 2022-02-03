@@ -10,12 +10,22 @@ let webstore = new Vue({
             attributes: "price",
             option: "",
         },
-        products: products,
+        products: null,
         cart: [],
         showProduct: true,
         search: "",
         phone_value: "",
     },
+    created: () => {
+        fetch("https://cw2-web-app.herokuapp.com/collection/lessons/")
+          .then((response) => {
+            return response.json();
+          })
+          .then((_lessons) => {
+            webstore.products = _lessons;
+            console.log(webstore.products.length);
+          });
+      },
 
     methods: {
 
@@ -37,8 +47,8 @@ let webstore = new Vue({
         // addToCart(product) function adds lesson to the  cart array and reduces the lesson space by 1
 
         addToCart(product) {
-            product.availableInventory = product.availableInventory - 1;
-            this.cart.push(product)
+            product.space = product.space - 1;
+            this.cart.push(product);
         },
 
         // removeToCart(index, d) function for loops through the product array checking if the product id matches 
@@ -47,8 +57,8 @@ let webstore = new Vue({
 
         removeToCart(index, d) {
             for (let i = 0; i < this.products.length; i++) {
-                if (this.products[i].id === d) {
-                    this.products[i].availableInventory = this.products[i].availableInventory + 1;
+                if (this.products[i]._id === d) {
+                    this.products[i].space = this.products[i].space + 1;
                 }
             };
             this.cart.splice(index, 1);
@@ -61,10 +71,67 @@ let webstore = new Vue({
         showCheckout() {
             this.showProduct = this.showProduct ? false : true;
         },
+        filterLesson(){
+            fetch("https://cw2-web-app.herokuapp.com/collection/lessons/search/" + this.search)
+            .then((response) => {
+              return response.json();
+            })
+            .then((_lessons) => {
+              webstore.products = _lessons;
+              console.log(webstore.products.length);
+            });
+        },
 
         // after checkout button pressed shows user "order submitted"
 
-        submitForm() { alert('order submitted!') },
+        // without the for loop u can get all 
+        submitForm() { 
+            fetch("https://cw2-web-app.herokuapp.com/collection/orders/", {
+                method: "POST",
+                body: JSON.stringify({
+                  firstName: this.order.firstName,
+                  lastName: this.order.lastName,
+                  phone: this.phone_value,
+                
+                  lessons:this.cart.map((item) => {
+                    return {
+                      _id: item._id,
+                      spaces: item.space,
+                      topic: item.topic,
+                    };
+                  }),
+                  
+              }),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              })
+                .then((response) => response.json())
+                .then((res) => {
+
+                 for (var i = 0; i < this.cart.length; ++i){
+                    console.log(this.cart[i]._id)
+                fetch("https://cw2-web-app.herokuapp.com/collection/lessons/" + this.cart[i]._id, {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        space: this.cart[i].space
+                    }),
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  })
+                    .then((response) => response.json())
+                    .then((res) => {
+
+                      location.reload();
+                    });
+                    } 
+                })
+            
+            alert('order submitted!') 
+        },
+
+
 
         // check out button disable when any feilds are empty
 
@@ -81,7 +148,7 @@ let webstore = new Vue({
         // checks if lesson spaces is more then 0 so they can add to cart
 
         canAddToCart(product) {
-            return product.availableInventory > 0;
+            return product.space > 0;
         },
 
         // for loop through cart and counts the items
@@ -110,14 +177,14 @@ let webstore = new Vue({
                 return this.products.sort((a,b) => a.location > b.location ? 1 : -1);
                 return 0;
             }
-            else if (n == "availableInventory") {
+            else if (n == "space") {
 
-                return this.products.sort((a,b) => a.availableInventory > b.availableInventory ? 1 : -1);
+                return this.products.sort((a,b) => a.space > b.space ? 1 : -1);
                 return 0;
             }
-            else if (n == "title") {
+            else if (n == "topic") {
 
-                return this.products.sort((a,b) => a.title > b.title ? 1 : -1);
+                return this.products.sort((a,b) => a.topic > b.topic ? 1 : -1);
                 return 0;
             }
 
@@ -135,12 +202,12 @@ let webstore = new Vue({
                 return this.products.sort((a,b) => a.location < b.location ? 1 : -1);
                 return 0;
             }
-            else if (n == "availableInventory") {
-                return this.products.sort((a,b) => a.availableInventory < b.availableInventory ? 1 : -1);
+            else if (n == "space") {
+                return this.products.sort((a,b) => a.space < b.space ? 1 : -1);
                 return 0;
             }
-            else if (n == "title") {
-                return this.products.sort((a,b) => a.title < b.title ? 1 : -1);
+            else if (n == "topic") {
+                return this.products.sort((a,b) => a.topic < b.topic ? 1 : -1);
                 return 0;
             }
 
@@ -163,11 +230,14 @@ let webstore = new Vue({
         // filters the lesson while the user searches
 
         filteredProducts: function () {
+            console.log(this.products)
             return this.products.filter((product) => {
-                return product.title.toLowerCase().match(this.search.toLowerCase());
+                return product.topic.toLowerCase().match(this.search.toLowerCase());
             });
         },
 
     },
+
+
 
 });
